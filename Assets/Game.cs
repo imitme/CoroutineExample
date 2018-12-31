@@ -13,31 +13,37 @@ public enum RESULT
     WIN=0, LOSE, DRAW, COUNT
 };
 
+
 public class Game : MonoBehaviour
 {
-    
-    public float duration =2f;
+    [HideInInspector] public int resultWinCount;
+    [HideInInspector] public int resultLoseCount;
+    [HideInInspector] public int resultDrawCount;
+    public float duration =5f;
     public Text countTime;
     public Text mySrp;
+    public Text resultCountTxt;
+    public Button startGame;
     public SRP sRP;
     private SRP nPC;
     private RESULT result;
-    
 
 
-    private void Start()
+    private void Awake()
     {
         StartCoroutine(CountDown(duration));
-        mySrp.text = "선택하세요!";
+        LoadGameData();
     }
-
+    
     IEnumerator CountDown(float duration)
     {
+        sRP = SRP.COUNT;
         var beginTime = Time.time;
         var time = 0f;
-
-        for(; ; )
+        
+        for (; ; )
         {
+            
             time = duration - (Time.time - beginTime);
             if(time >= 0f)
             {
@@ -52,9 +58,30 @@ public class Game : MonoBehaviour
         }
         countTime.text = "승자는?";
 
-
         CompareNPC();
         ResultSrp();
+        ResetResultCount();
+    }
+
+    private void Start()
+    {
+        mySrp.text = "선택하세요!";
+    }
+
+    public void OnStartButton()
+    {
+        mySrp.text = "선택하세요!";
+        StartCoroutine(CountDown(duration));
+    }
+
+    void LoadGameData()
+    {
+        resultWinCount = PlayerPrefs.GetInt("RESULT_WIN_COUNT", 0);
+        resultLoseCount = PlayerPrefs.GetInt("RESULT_LOSE_COUNT", 0);
+        resultDrawCount = PlayerPrefs.GetInt("RESULT_DRAW_COUNT", 0);
+        resultCountTxt.text = "| 총 승리횟수 : " + resultWinCount.ToString("000 |") +
+                              "| 총 패배횟수 : " + resultLoseCount.ToString("000 |") +
+                              "| 총 비긴횟수 : " + resultDrawCount.ToString("000 |");
     }
 
     void CompareNPC()
@@ -100,6 +127,9 @@ public class Game : MonoBehaviour
                         result = RESULT.WIN;
                     }
                     break;
+                case SRP.COUNT:
+                    result = RESULT.COUNT;
+                    break;
                 default:
                     break;
             }
@@ -112,17 +142,52 @@ public class Game : MonoBehaviour
         {
             case RESULT.WIN:
                 mySrp.text = "나!";
+                AddResultCount(result);
                 break;
             case RESULT.LOSE:
                 mySrp.text = "NPC!";
+                AddResultCount(result);
                 break;
             case RESULT.DRAW:
                 mySrp.text = "없어_비김!";
+                AddResultCount(result);
+                break;
+            case RESULT.COUNT:
+                mySrp.text = "안냈어_다시!";
                 break;
             default:
                 mySrp.text = "없어_다시!";
                 break;
-
         }
+
+    }
+    void AddResultCount(RESULT result)
+    {
+        switch (result)
+        {
+            case RESULT.WIN:
+                ++resultWinCount;
+                PlayerPrefs.SetInt("RESULT_WIN_COUNT", resultWinCount);
+                break;
+            case RESULT.LOSE:
+                ++resultLoseCount;
+                PlayerPrefs.SetInt("RESULT_LOSE_COUNT", resultLoseCount);
+                break;
+            case RESULT.DRAW:
+                ++resultDrawCount;
+                PlayerPrefs.SetInt("RESULT_DRAW_COUNT", resultDrawCount);
+                break;
+            case RESULT.COUNT:
+                break;
+            default:
+                break;
+        }
+    }
+
+    void ResetResultCount()
+    {
+        resultCountTxt.text = "| 총 승리횟수 : " + resultWinCount.ToString("000 |") +
+                              "| 총 패배횟수 : " + resultLoseCount.ToString("000 |") +
+                              "| 총 비긴횟수 : " + resultDrawCount.ToString("000 |");
     }
 }
